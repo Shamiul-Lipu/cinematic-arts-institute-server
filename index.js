@@ -10,7 +10,7 @@ app.use(express.json());
 
 // connet mongodb
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.lvuf5o9.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -26,6 +26,43 @@ async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
+
+        // collections
+        const classesCollection = client.db('cinematicArtsDB').collection('classes');
+        const selectedClassesCollection = client.db('cinematicArtsDB').collection('selectedClasses');
+
+        // get all classes data
+        app.get('/all-classes', async (req, res) => {
+            const result = await classesCollection.find().toArray();
+            res.send(result)
+        })
+
+        // post selected classes [users endpoint]
+        app.post('/selected-classes', async (req, res) => {
+            const selectedClasse = req.body
+            const result = await selectedClassesCollection.insertOne(selectedClasse);
+            res.send(result);
+        })
+
+        // get selected classes [users endpoint]
+        app.get('/selected-classes', async (req, res) => {
+            const email = req.query.email;
+            if (!email) {
+                res.send([])
+            }
+            const query = { email: email }
+            const result = await selectedClassesCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        // delete from selected classes [users endpoint]
+        app.delete('/selected-classes/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await selectedClassesCollection.deleteOne(query)
+            res.send(result);
+        })
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
