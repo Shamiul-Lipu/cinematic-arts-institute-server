@@ -30,6 +30,7 @@ async function run() {
         // collections
         const classesCollection = client.db('cinematicArtsDB').collection('classes');
         const selectedClassesCollection = client.db('cinematicArtsDB').collection('selectedClasses');
+        const usersCollection = client.db('cinematicArtsDB').collection('users');
 
         // get all classes data
         app.get('/all-classes', async (req, res) => {
@@ -37,9 +38,43 @@ async function run() {
             res.send(result)
         })
 
+        // create user data api
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            const query = { email: user.email }
+            const existingUser = await usersCollection.findOne(query);
+            if (existingUser) {
+                return res.send({ message: 'user already exists' })
+            }
+            const result = await usersCollection.insertOne(user);
+            res.send(result);
+        })
+
+        // get all user
+        app.get('/users', async (req, res) => {
+            const result = await usersCollection.find().toArray();
+            res.send(result);
+        })
+
+        // change user role
+        app.put('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const reqRole = req.query.role;
+            console.log(email, reqRole);
+            const query = { email: email }
+            const options = { upsert: true }
+            const updateDoc = {
+                $set: {
+                    role: reqRole
+                },
+            };
+            const result = await usersCollection.updateOne(query, updateDoc, options)
+            res.send(result)
+        })
+
         // post selected classes [users endpoint]
         app.post('/selected-classes', async (req, res) => {
-            const selectedClasse = req.body
+            const selectedClasse = req.body;
             const result = await selectedClassesCollection.insertOne(selectedClasse);
             res.send(result);
         })
