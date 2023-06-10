@@ -79,6 +79,7 @@ async function run() {
             res.send(result)
         })
 
+
         // create user data api
         app.post('/users', async (req, res) => {
             const user = req.body;
@@ -117,6 +118,27 @@ async function run() {
         app.post('/selected-classes', async (req, res) => {
             const selectedClasse = req.body;
             const result = await selectedClassesCollection.insertOne(selectedClasse);
+            res.send(result);
+        })
+
+        // seats update
+        app.get('/all-classes/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await classesCollection.findOne(query)
+            res.send(result)
+        })
+        app.patch('/update-class-seats/:id', async (req, res) => {
+            const id = req.params.id;
+            const updateSeats = req.body;
+            const filter = { _id: new ObjectId(id) };
+            // console.log(updateToys)
+            const updateDoc = {
+                $set: {
+                    ...updateSeats
+                }
+            }
+            const result = await classesCollection.updateOne(filter, updateDoc);
             res.send(result);
         })
 
@@ -244,19 +266,19 @@ async function run() {
             res.send({ insertResult, deleteResult });
         })
         // update from admin, instructor class status
-        app.patch('/update-seats/:id', async (req, res) => {
-            const id = req.params.id;
-            const updateStatus = req.body;
-            const filter = { _id: new ObjectId(id) };
-            // console.log(updateToys)
-            const updateDoc = {
-                $set: {
-                    ...updateStatus
-                }
-            }
-            const result = await classesCollection.updateOne(filter, updateDoc);
-            res.send(result);
-        })
+        // app.patch('/update-seats/:id', async (req, res) => {
+        //     const id = req.params.id;
+        //     const updateStatus = req.body;
+        //     const filter = { _id: new ObjectId(id) };
+        //     // console.log(updateToys)
+        //     const updateDoc = {
+        //         $set: {
+        //             ...updateStatus
+        //         }
+        //     }
+        //     const result = await classesCollection.updateOne(filter, updateDoc);
+        //     res.send(result);
+        // })
         // find single class form seats update
         app.get('/find-paid-class/:id', async (req, res) => {
             const id = req.params.id;
