@@ -169,6 +169,19 @@ async function run() {
             res.send(result);
         })
 
+        // Get user enrolled courses
+        app.get('/users-enrolled', async (req, res) => {
+            const email = req.query.email;
+            if (!email) {
+                res.send([]);
+            }
+
+            const query = { email: email };
+            const result = await paymentCollection.find(query).sort({ date: -1 }).toArray();
+            res.send(result);
+        });
+
+
         // Get user
         app.get('/users/:email', async (req, res) => {
             const email = req.params.email
