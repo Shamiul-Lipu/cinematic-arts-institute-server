@@ -73,11 +73,11 @@ async function run() {
             next();
         }
 
-        // get all classes data
+        // get all classes data sorted by number of students
         app.get('/all-classes', async (req, res) => {
-            const result = await classesCollection.find().toArray();
-            res.send(result)
-        })
+            const result = await classesCollection.find().sort({ numOfStudent: -1 }).toArray();
+            res.send(result);
+        });
 
 
         // create user data api
@@ -102,7 +102,7 @@ async function run() {
         app.put('/users/:email', async (req, res) => {
             const email = req.params.email;
             const reqRole = req.query.role;
-            console.log(email, reqRole);
+            // console.log(email, reqRole);
             const query = { email: email }
             const options = { upsert: true }
             const updateDoc = {
@@ -181,6 +181,18 @@ async function run() {
             res.send(result);
         });
 
+        // get student
+        app.get('/users/student/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+            if (req.decoded.email !== email) {
+                return res.status(403).send({ error: true, message: 'forbidden access' })
+            }
+            const query = { email: email };
+            const userStudent = await usersCollection.findOne(query);
+            const result = { student: userStudent?.role === 'student' };
+            res.send(result);
+        })
+
 
         // Get user
         app.get('/users/:email', async (req, res) => {
@@ -221,6 +233,24 @@ async function run() {
             const result = await classesCollection.updateOne(filter, updateDoc);
             res.send(result);
         })
+        // update feedback
+
+        app.patch('/feedback/:id', async (req, res) => {
+            const id = req.params.id;
+            const { feedback } = req.body;
+            const updateStatus = req.body;
+            const filter = { _id: new ObjectId(id) };
+            // console.log(updateToys)
+            const updateDoc = {
+                $set: {
+                    ...updateStatus
+                }
+            }
+            const result = await classesCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        });
+
+
         // get instructor
         app.get('/users/instructor/:email', verifyJWT, async (req, res) => {
             const email = req.params.email;
@@ -275,7 +305,7 @@ async function run() {
             const query = { _id: new ObjectId(selectedClassID) }
             const deleteResult = await selectedClassesCollection.deleteOne(query)
 
-            console.log(query);
+            // console.log(query);
             res.send({ insertResult, deleteResult });
         })
         // update from admin, instructor class status
